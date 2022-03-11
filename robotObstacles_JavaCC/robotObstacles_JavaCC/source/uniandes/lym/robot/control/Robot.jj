@@ -53,6 +53,8 @@ public class Robot
 }
 
 Hashtable<String, Integer> variablesYValores = new Hashtable<String, Integer>();
+Hashtable<String, Integer> tablaFunciones = new Hashtable<String, Integer>();
+
 PARSER_END(Robot)
 
 SKIP:
@@ -114,6 +116,11 @@ TOKEN :
 {
 		<NUMERO: (<DIGIT>)+ >
 		|  	<#DIGIT: ["0"-"9"] >
+}
+
+TOKEN :/* A function call */
+{
+		<FUNCION: { }>
 }
 
 TOKEN :
@@ -212,24 +219,36 @@ TOKEN : /*Constantes */
 
 
 
-	String condition(StringBuffer sistema) :
+	boolean condition(StringBuffer sistema) :
 	{	
-		
-		int x;
-		String n;
+		int x = null;
+		String n = null;
+		int num = 0;
 		salida=new String();
-		
 	}
 
 	{
 		(
-
-		   	"(" <FACING_P> (":north"|":south"|":east"|":west") ")"  {}  
-		| 	"(" <CAN_PUT_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")" {}
-		| 	"(" <CAN_PICK_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")" {}
-		|   "(" <CAN_MOVE_P> (":north"|":south"|":east"|":west") ")"  {}  
+		   	"(" <FACING_P> <CONSTANT_FACE> ")"
+		   	{
+			facing_p();
+		    }  
+		| 	"(" <CAN_PUT_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")"
+			{
+			  can_put_p();
+			 }
+		| 	"(" <CAN_PICK_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")"
+			{
+			  can_pick_p();
+			 }
+		|   "(" <CAN_MOVE_P> <CONSTANT_FACE> ")"
+			{
+			  can_move_p();
+			}  
 		|   "(" <NOT> condition() ")" {}  
-		/* A function call */
+		|	"(" ")"
+			{
+		  }
 
 		) 
 
@@ -249,7 +268,104 @@ TOKEN : /*Constantes */
 		| <EOF> {return false;} 
 	}
 
+	boolean facing_p():
+	{
+		  resp=false;
+		  if RobotWorld.getFacing()==token.image
+	  	  {
+			resp= true;
+		  }
+		  else
+		  {
+		    resp false;
+		  }
+		  return resp;
+	}
+	{}
 
+	
+	boolean can_put_p():
+		{
+		  resp=false
+		  if x != null
+		  {
+		    num=x;
+		  }
+		  else if n != null
+		  {
+		    num=variablesYValores.get(n);
+		  }
+		  if num==0 || ("BALLOONS"==token.image && RobotWorld.getMyBalloons()<=(num) && RobotWorld.chipExists()==false) || ("CHIPS"==token.image && RobotWorldDec.freeSpacesForChips()>num && RobotWorld.getMyChips<=(num) && RobotWorld.chipExists()==false)
+		  {
+		    resp= true;
+		  }
+		  else
+		  {
+		  	resp= false;
+		  }
+		  return resp
+		}
+		{}
+		
+	boolean can_pick_p():
+		{
+		  resp=false;
+		  if x != null
+		  {
+		    num=x;
+		  }
+		  else if n != null
+		  {
+		    num=variablesYValores.get(n);
+		  }
+		  if num==0 || ("BALLOONS"==token.image && RobotWorld.countBalloons()>=(num)) || ("CHIPS"==token.image && RobotWorld.chipsToPick()>num && RobotWorld.chipExists()==true)
+		  {
+		    resp= true;
+		  }
+		  else
+		  {
+		  	resp= false;
+		  }
+		  return resp;
+		}
+		{}
+			  
+	boolean can_move_p():
+		{
+		  p=RobotWorld.getPosition();
+		  resp=true;
+		  if token.image==":north"
+		  {
+		    if RobotWorld.isBlocked(p.x,p.y-1)
+		    {
+		      resp= false;
+		    }
+		  }
+		  else if token.image==":south"
+		  {
+		    if RobotWorld.isBlocked(p.x,p.y+1)
+		    {
+		      resp= false;
+		    }
+		  }
+		  else if token.image==":west"
+		  {
+		    if RobotWorld.isBlocked(p.x-1,p.y)
+		    {
+		      resp= false;
+		    }
+		  }
+		  else if token.image==":east"
+		  {
+		    if RobotWorld.isBlocked(p.x+1,p.y)
+		    {
+		      resp= false;
+		    }
+		  }
+		  return resp;
+		}
+		{}
+		
 	void objetoPoner() :
 	{
 		int f=1;	

@@ -376,7 +376,7 @@ public class RobotWorld {
 	}
 	
 	/**
-	* @return number of  held by the robot
+	* @return number of held by the robot
     */
 	public int getMyBalloons() {
 		return this.ballons;
