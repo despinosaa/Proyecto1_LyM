@@ -51,6 +51,8 @@ public class Robot
 
 	String salida=new String();
 }
+
+Hashtable<String, Integer> variablesYValores = new Hashtable<String, Integer>();
 PARSER_END(Robot)
 
 SKIP:
@@ -58,19 +60,46 @@ SKIP:
 	" "
 	|	"\r"
 	|	"\t"
-//	| "\n"
+	| 	"\n"
 }
 
 TOKEN: /* Nombres de Comandos */
 {
 
-			<T_MOVER:  "Move">
-		| 	<T_TURNRIGHT: "TURNRIGHT">
-		| 	<T_PONER: "Put">
-		| 	<T_RECOGER: "Pick">
-		|  < T_POP: "Pop" >
-		
+			<DEFVAR:  "defvar">
+		| 	<IGUAL: "=">
+		| 	<MOVE: "move">
+		| 	<TURN: "turn">
+		|   <FACE: "face">
+		|   <PUT: "put">
+		|   <PICK: "pick">
+		|   <MOVE_DIR: "move-dir">
+		|   <RUN_DIRS: "run-dirs">
+		|   <MOVE_FACE: "move-face">
+		|   <SKIP: "skip">
+		/* A function call */
+}
 
+TOKEN: /* Nombres de Estructuras */
+{
+
+			<IF:  "if">
+		| 	<LOOP: "loop">
+		| 	<REPEAT: "repeat">
+		| 	<DEFUN: "defun">
+		
+}
+
+TOKEN: /* Nombres de condiciones */
+{
+
+			<FACING_P:  "facing-p">
+		| 	<CAN_PUT_P: "can-put-p">
+		| 	<CAN_PICK_P: "can-pick-p">
+		| 	<CAN_MOVE_P: "can-move-p">
+		| 	<NOT: "not">
+		/* A function call */
+		
 }
 
 TOKEN :
@@ -87,23 +116,45 @@ TOKEN :
 		|  	<#DIGIT: ["0"-"9"] >
 }
 
+TOKEN :
+{
+		<NOMBRE: ((<LETRAM>) | (<LETRAm>) ((<NUMERO>)*((<LETRAM>) | (<LETRAm>))* )*>
+		|  	<LETRAM: ["A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z"]  >
+		|  	<LETRAm: ["a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z"] >
+}
 
+TOKEN : /*Constantes */
+{
+		<CONSTANT_TURN: ":left"|":right"|":around">
+		<CONSTANT_FACE: ":north"|":south"|":east"|":west">
+		<CONSTANT_DIR: ":front"|":right"|":left"|":back" >
+}
 	boolean command(StringBuffer sistema) :
 	{	
 		
 		int x;
+		String n;
 		salida=new String();
 		
 	}
 	
 	{
 		(
-		   <T_TURNRIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<T_MOVER>  "(" x=numero() ")" {world.moveForward(x);salida = "Command: Moveforward ";}  
-		|  <T_PONER> "("  objetoPoner() ")"					  			
-		|  <T_RECOGER> "("  objetoRecoger()  ")"	
-	    |  < T_POP > "(" x=numero() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		) "\n" 
+
+		   	"(" <DEFVAR> n=nombre() x=numero() ")" {variablesYValores.put(n,x);salida = "Variable "+ n + " declarada con valor " + String.valueOf(x);}  
+		| 	"(" <IGUAL>  n=nombreVariable() x=numero() ")" {variablesYValores.put(n,x);salida = "Se reemplazó la variable "+ n + " con el valor " + String.valueOf(x);}
+		| 	"(" <MOVE>  (x=numero()|n=nombreVariable()) ")" {world.moveForward(x);salida = "Command: Moveforward ";}  
+		|   "(" <TURN> <CONSTANT_TURN> ")" { }			  			
+		|   "(" <FACE> <CONSTANT_FACE> ")" { }	
+	    |   "(" <PUT> objetoPoner() ")" {world.popBalloons(x); salida = "Comando:  Put";}
+	    |   "(" <PICK> objetoRecoger() ")" {world.pickBalloons(x); salida = "Comando:  Pick";}
+	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")" {}
+	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {}
+	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")" {}
+	    |   "(" <SKIP> ")" {}
+		/* A function call */
+
+		) 
 
 		{
 		  //  try {
@@ -120,6 +171,84 @@ TOKEN :
 
 		| <EOF> {return false;} 
 	}
+
+
+
+
+	boolean structure(StringBuffer sistema) :
+	{	
+		
+		int x;
+		String n;
+		salida=new String();
+		
+	}
+	
+	{
+		(
+
+		   	"(" <IF> x=condition() bloque1() bloque2() ")" {}  
+		| 	"(" <LOOP>   x=condition() bloque1() ")" {}
+		| 	"(" <REPEAT>  (x=numero()|n=nombreVariable()) bloque1() ")" {}  
+		|   "(" <DEFUN> n=nombreFuncion() "(" (<NOMBRE>)* ")" bloque1() ")" { }			  			
+		) 
+
+		{
+		  //  try {
+	    	//		 Thread.sleep(1);
+	    	  //   } catch (InterruptedException e) {
+	    		//	        System.err.format("IOException: %s%n", e);
+	    		//	    }
+	    			 
+			sistema.append(salida);
+			return true;
+		}
+
+     |  "\n" { return true; }
+
+		| <EOF> {return false;} 
+	}
+
+
+
+
+	String condition(StringBuffer sistema) :
+	{	
+		
+		int x;
+		String n;
+		salida=new String();
+		
+	}
+
+	{
+		(
+
+		   	"(" <FACING_P> (":north"|":south"|":east"|":west") ")"  {}  
+		| 	"(" <CAN_PUT_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")" {}
+		| 	"(" <CAN_PICK_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")" {}
+		|   "(" <CAN_MOVE_P> (":north"|":south"|":east"|":west") ")"  {}  
+		|   "(" <NOT> condition() ")" {}  
+		/* A function call */
+
+		) 
+
+		{
+		  //  try {
+	    	//		 Thread.sleep(1);
+	    	  //   } catch (InterruptedException e) {
+	    		//	        System.err.format("IOException: %s%n", e);
+	    		//	    }
+	    			 
+			sistema.append(salida);
+			return true;
+		}
+
+     |  "\n" { return true; }
+
+		| <EOF> {return false;} 
+	}
+
 
 	void objetoPoner() :
 	{
@@ -149,6 +278,37 @@ TOKEN :
 	 * @return el valor entero correspondiente al valor reconocido
 	 */
 
+
+	String nombre():
+	{
+	  String nombre="";
+	}
+	{
+	  <NOMBRE>
+	  {
+	    return nombre;
+	  }
+	}
+
+
+	String nombreVariable():
+	{
+		for (i=0;i<5;i++) {
+			if (diccionario[i] === undefined) {
+		    	console.log('la clave',i,'no está presente');
+			}
+		 	else {
+		    	console.log('la clave',i,'está presente');
+		  	}
+		}
+	}
+	{
+	  <NOMBRE>
+	  {
+	    return nombre;
+	  }
+	}
+	
 	int numero() throws Error:
 	{	
 		int total=1;

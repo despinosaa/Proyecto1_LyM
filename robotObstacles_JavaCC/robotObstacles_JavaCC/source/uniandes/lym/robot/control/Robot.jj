@@ -118,11 +118,17 @@ TOKEN :
 
 TOKEN :
 {
-		<NOMBRE: ((<NUMERO>)*((<LETRAM>)|(<LETRAm>))* )* (<LETRAM>)|(<LETRAm>) ((<NUMERO>)*((<LETRAM>)|(<LETRAm>))* )*>
-		|  	<#LETRAM: "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z"]  >
-		|  	<#LETRAM: ["a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z"] >
+		<NOMBRE: ((<LETRAM>) | (<LETRAm>) ((<NUMERO>)*((<LETRAM>) | (<LETRAm>))* )*>
+		|  	<LETRAM: ["A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z"]  >
+		|  	<LETRAm: ["a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z"] >
 }
 
+TOKEN : /*Constantes */
+{
+		<CONSTANT_TURN: ":left"|":right"|":around">
+		<CONSTANT_FACE: ":north"|":south"|":east"|":west">
+		<CONSTANT_DIR: ":front"|":right"|":left"|":back" >
+}
 	boolean command(StringBuffer sistema) :
 	{	
 		
@@ -138,13 +144,13 @@ TOKEN :
 		   	"(" <DEFVAR> n=nombre() x=numero() ")" {variablesYValores.put(n,x);salida = "Variable "+ n + " declarada con valor " + String.valueOf(x);}  
 		| 	"(" <IGUAL>  n=nombreVariable() x=numero() ")" {variablesYValores.put(n,x);salida = "Se reemplazó la variable "+ n + " con el valor " + String.valueOf(x);}
 		| 	"(" <MOVE>  (x=numero()|n=nombreVariable()) ")" {world.moveForward(x);salida = "Command: Moveforward ";}  
-		|   "(" <TURN> (":left"|":right"|":around")")" { }			  			
-		|   "(" <FACE> (":north"|":south"|":east"|":west")")" { }	
-	    |   "(" <PUT> objetoPoner() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		|   "(" <TURN> <CONSTANT_TURN> ")" { }			  			
+		|   "(" <FACE> <CONSTANT_FACE> ")" { }	
+	    |   "(" <PUT> objetoPoner() ")" {world.popBalloons(x); salida = "Comando:  Put";}
 	    |   "(" <PICK> objetoRecoger() ")" {world.pickBalloons(x); salida = "Comando:  Pick";}
-	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) (":front"|":right"|":left"|":back") ")" {}
-	    |   "(" <RUN_DIRS> "(" (":front"|":right"|":left"|":back")+ ")"  ")" {}
-	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) (":north"|":south"|":east"|":west") ")" {}
+	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")" {}
+	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {}
+	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")" {}
 	    |   "(" <SKIP> ")" {}
 		/* A function call */
 
@@ -287,13 +293,14 @@ TOKEN :
 
 	String nombreVariable():
 	{
-	  for (let i=0;i<5;i++) {
-		  if (diccionario[i] === undefined) {
-		    console.log('la clave',i,'no está presente');
-		  } else {
-		    console.log('la clave',i,'está presente');
-		  }
-}
+		for (i=0;i<5;i++) {
+			if (diccionario[i] === undefined) {
+		    	console.log('la clave',i,'no está presente');
+			}
+		 	else {
+		    	console.log('la clave',i,'está presente');
+		  	}
+		}
 	}
 	{
 	  <NOMBRE>
