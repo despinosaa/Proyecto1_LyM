@@ -107,8 +107,7 @@ TOKEN: /* Nombres de condiciones */
 TOKEN :
 {
 		<T_BALLOONS:  "BALLOONS" >
-		|	<T_CHIPS:     "CHIPS"  >	
-
+		|	<T_CHIPS:   "CHIPS"  >	
 }
 
 
@@ -118,10 +117,6 @@ TOKEN :
 		|  	<#DIGIT: ["0"-"9"] >
 }
 
-TOKEN :/* A function call */
-{
-		<FUNCION: { }>
-}
 
 TOKEN :
 {
@@ -159,9 +154,11 @@ TOKEN : /*Constantes */
 	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {}
 	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")" {}
 	    |   "(" <SKIP> ")" {}
-		/* A function call */
+		|   "(" x=funcion() ")" {nombrefuncion()}
 
-		) 
+		)
+
+	
 
 		{
 		  //  try {
@@ -180,7 +177,20 @@ TOKEN : /*Constantes */
 	}
 
 
-
+	funcion():
+	{
+	  for (i=0;i<tablaFunciones.size();i++) {
+			if (tablaFunciones[i] == undefined) {
+		    	console.log('la clave',i,'no está presente');
+			}
+		 	else {
+		    	console.log('la clave',i,'está presente');
+		  	}
+		}
+	x=tablaFunciones.get(n)
+	}
+	{
+	}
 
 	boolean structure(StringBuffer sistema) :
 	{	
@@ -194,30 +204,29 @@ TOKEN : /*Constantes */
 	{
 		(
 
-		   	"(" <IF> x=condition() bloque1() bloque2() ")" {}  
+		   	"(" <IF> x=condition() y=bloque() z=bloque() ")" {}  
 		| 	"(" <LOOP>   x=condition() bloque1() ")" {}
 		| 	"(" <REPEAT>  (x=numero()|n=nombreVariable()) bloque1() ")" {}  
 		|   "(" <DEFUN> n=nombreFuncion() "(" (<NOMBRE>)* ")" bloque1() ")" { }			  			
 		) 
 
-		{
-		  //  try {
-	    	//		 Thread.sleep(1);
-	    	  //   } catch (InterruptedException e) {
-	    		//	        System.err.format("IOException: %s%n", e);
-	    		//	    }
-	    			 
-			sistema.append(salida);
-			return true;
-		}
-
-     |  "\n" { return true; }
-
-		| <EOF> {return false;} 
+		
 	}
 
 
-
+	boolean bloque(StringBuffer sistema):
+	{
+		int x = null;
+		String n = null;
+		int num = 0;
+		salida=new String();
+	}
+	{
+	  (
+	      "(" structure() ")" {}  
+		| "(" command() ")" {}	  )+
+	}
+	
 
 	boolean condition(StringBuffer sistema) :
 	{	
@@ -252,20 +261,6 @@ TOKEN : /*Constantes */
 
 		) 
 
-		{
-		  //  try {
-	    	//		 Thread.sleep(1);
-	    	  //   } catch (InterruptedException e) {
-	    		//	        System.err.format("IOException: %s%n", e);
-	    		//	    }
-	    			 
-			sistema.append(salida);
-			return true;
-		}
-
-     |  "\n" { return true; }
-
-		| <EOF> {return false;} 
 	}
 
 	boolean facing_p():
