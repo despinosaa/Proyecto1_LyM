@@ -134,8 +134,8 @@ TOKEN : /*Constantes */
 	boolean command(StringBuffer sistema) :
 	{	
 		
-		int x;
-		String n;
+		int x = null;
+		String n = null;
 		salida=new String();
 		
 	}
@@ -145,20 +145,24 @@ TOKEN : /*Constantes */
 
 		   	"(" <DEFVAR> n=nombre() x=numero() ")" {variablesYValores.put(n,x);salida = "Variable "+ n + " declarada con valor " + String.valueOf(x);}  
 		| 	"(" <IGUAL>  n=nombreVariable() x=numero() ")" {variablesYValores.put(n,x);salida = "Se reemplazó la variable "+ n + " con el valor " + String.valueOf(x);}
-		| 	"(" <MOVE>  (x=numero()|n=nombreVariable()) ")" {world.moveForward(x);salida = "Command: Moveforward ";}  
-		|   "(" <TURN> <CONSTANT_TURN> ")" { }			  			
-		|   "(" <FACE> <CONSTANT_FACE> ")" { }	
+		| 	"(" <MOVE>  (x=numero()|n=nombreVariable()) ")" {if x != null { move(x)}
+	    													else if n != null { move(n)}}  
+		|   "(" <TURN> <CONSTANT_TURN> ")" {turn(token.image)}			  			
+		|   "(" <FACE> <CONSTANT_FACE> ")" {face(token.image)}	
 	    |   "(" <PUT> objetoPoner() ")" {world.popBalloons(x); salida = "Comando:  Put";}
 	    |   "(" <PICK> objetoRecoger() ")" {world.pickBalloons(x); salida = "Comando:  Pick";}
-	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")" {}
-	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {}
-	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")" {}
+	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")"  {if x != null { move_dir(token.imagen, x)}
+	    																		else if n != null { move_dir(token.image, n)}
+	    																		}
+	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {//????????????????????????????????
+	    													}
+	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")"{if x != null { move_face(token.imagen, x)}
+	    																		else if n != null { move_face(token.image, n)}
+	    																		}
 	    |   "(" <SKIP> ")" {}
 		|   "(" x=funcion() ")" {nombrefuncion()}
 
 		)
-
-	
 
 		{
 		  //  try {
@@ -176,7 +180,227 @@ TOKEN : /*Constantes */
 		| <EOF> {return false;} 
 	}
 
+	//COMANDOS
 
+	//MOVE
+	void move(k):
+	{
+	for (i=1; i<=k; i++) { 
+		if can_move_p {
+		  world.moveForward(i);
+		}
+		else {
+		  print("Hay un obstaculo");
+		}
+	}
+	}
+	{
+	}
+
+	
+	//TURN
+	void turn(c_turn):
+	{
+		if c_turn == ":right" {
+			RobotWorld.turnRight();
+		}
+		else if c_turn == ":left" {
+			RobotWorld.turnRight();
+			RobotWorld.turnRight();
+			RobotWorld.turnRight();
+		}
+		else if c_turn == ":around" {
+			RobotWorld.turnRight();
+			RobotWorld.turnRight();
+		}
+		else:
+			print("Direccion no valida")
+	}
+	{
+	}
+
+	//FACE
+	void face(c_face, k):
+	{
+		if c_face == ":north" {
+		  	face_north(c_face);
+		}
+		else if c_face == ":south" {
+			face_south(c_face);
+		}
+		else if c_face == ":east" {
+			face_east(c_face);
+		}
+		else if c_face == ":west" {
+			face_west(c_face);
+		}
+		else:
+			print("Orientacion no valida")
+	}
+	{
+	}
+
+	//FACE NORTH
+	void face_north(c_face) {
+	  if RobotWorld.getFacing() == SOUTH {
+	    RobotWorld.turnRight();
+	    RobotWorld.turnRight();
+	  	}
+	  else if RobotWorld.getFacing() == EAST {
+	    RobotWorld.turnRight();
+	    RobotWorld.turnRight();
+	    RobotWorld.turnRight();
+	  	}
+	  else if RobotWorld.getFacing() == WEST {
+	    RobotWorld.turnRight();
+	 	}
+	}
+	{
+	}
+
+	//FACE SOUTH
+	void face_south(c_face) {
+	  if RobotWorld.getFacing() == NORTH {
+		  RobotWorld.turnRight();
+	  	  RobotWorld.turnRight();
+	  	}
+	  else if RobotWorld.getFacing() == EAST {
+	  	  RobotWorld.turnRight();
+	  	    
+	  	}
+	  else if RobotWorld.getFacing() == WEST {
+	  	  RobotWorld.turnRight();
+	  	  RobotWorld.turnRight();
+	  	  RobotWorld.turnRight();	  	
+	  	}
+	}
+	{
+	}
+
+	//FACE EAST
+	void face_east(c_face) {
+	  if RobotWorld.getFacing() == NORTH {
+		  RobotWorld.turnRight();  
+		}
+	  else if RobotWorld.getFacing() ==  SOUTH {
+	  	  RobotWorld.turnRight();
+	  	  RobotWorld.turnRight();
+		  RobotWorld.turnRight();
+	  	}
+	  else if RobotWorld.getFacing() ==  WEST{
+	  	  RobotWorld.turnRight();
+		  RobotWorld.turnRight();
+	  	}
+	}
+	{
+	}
+
+	//FACE WEST
+	void face_west(c_face) {
+	  if RobotWorld.getFacing() == NORTH {
+		  RobotWorld.turnRight();
+	  	  RobotWorld.turnRight();
+		  RobotWorld.turnRight();
+	  	}
+	  else if RobotWorld.getFacing() == SOUTH {
+	  	  RobotWorld.turnRight();
+	  	  
+	  	}
+	  else if RobotWorld.getFacing() == EAST {
+	  	  RobotWorld.turnRight();
+		  RobotWorld.turnRight();
+	  	}
+	}
+	{
+	}
+
+	//MOVE DIR
+	void move_dir(c_dir, k):
+	{
+		
+		if c_dir == ":right" {
+		  	for (i=1; i<=k; i++) {
+				RobotWorld.right();
+			}
+		}
+		else if c_dir == ":left" {
+		  	for (i=1; i<=k; i++) {
+				RobotWorld.left();
+			}
+		}
+		else if c_dir == ":front" {
+		  	for (i=1; i<=k; i++) {
+				RobotWorld.up();
+			}
+		}
+		else if c_dir == ":back" {
+		  	for (i=1; i<=k; i++) {
+				RobotWorld.down();
+			}
+		}
+		else:
+			print("Direccion no valida")
+	}
+	{
+	}
+
+	//RUN DIRS
+	void run_dirs(lista_dirs):
+	{
+	  	//for i in lista de direcciones
+			if c_dir == ":right" {
+			  	RobotWorld.right();
+			}
+			else if c_dir == ":left" {
+			  	RobotWorld.left();
+			}
+			else if c_dir == ":front" {
+			  	RobotWorld.up();
+			}
+			else if c_dir == ":back" {
+			  	RobotWorld.down();
+			}
+			else:
+				print("Direccion no valida")
+	}
+	{
+	}
+
+	//MOVE FACE
+	void move_face(c_face, k):
+	{
+	  	boolean bien = true;
+		if c_face == ":north" {
+		  	face_north(c_face)
+		}
+		else if c_face == ":south" {
+			face_south(c_face)
+		}
+		else if c_face == ":east" {
+			face_east(c_face) 
+		}
+		else if c_face == ":west" {
+			face_west(c_face)
+		}
+		else:
+			print("Orientacion no valida")
+			paila = false;
+			
+		if paila { 
+			for (i=1; i<=k; i++) { 
+				if can_move_p {
+				  world.moveForward(i);
+				}
+				else {
+			  		print("Hay un obstaculo");
+				}
+			}
+		}
+	}
+	{
+	}
+	
+	//LLAMAR FUNCION
 	funcion():
 	{
 	  for (i=0;i<tablaFunciones.size();i++) {
@@ -192,13 +416,12 @@ TOKEN : /*Constantes */
 	{
 	}
 
+	//ESTRUCTURAS
 	boolean structure(StringBuffer sistema) :
 	{	
-		
 		int x;
 		String n;
 		salida=new String();
-		
 	}
 	
 	{
@@ -213,7 +436,7 @@ TOKEN : /*Constantes */
 		
 	}
 
-
+	//BLOQUE
 	boolean bloque(StringBuffer sistema):
 	{
 		int x = null;
@@ -227,7 +450,7 @@ TOKEN : /*Constantes */
 		| "(" command() ")" {}	  )+
 	}
 	
-
+	//CONDICIONES
 	boolean condition(StringBuffer sistema) :
 	{	
 		int x = null;
