@@ -53,7 +53,7 @@ public class Robot
 }
 
 Hashtable<String, Integer> variablesYValores = new Hashtable<String, Integer>();
-Hashtable<String, Integer> tablaFunciones = new Hashtable<String, Integer>();
+Map<String, Map<String, ?>> tablaFunciones = new Map<String, Map<String, ?>>();
 
 PARSER_END(Robot)
 
@@ -130,6 +130,7 @@ TOKEN : /*Constantes */
 		<CONSTANT_TURN: ":left"|":right"|":around">
 		<CONSTANT_FACE: ":north"|":south"|":east"|":west">
 		<CONSTANT_DIR: ":front"|":right"|":left"|":back" >
+		<CONSTANT_DIRS: (":front"|":right"|":left"|":back")(", :front"|", :right"|", :left"|", :back")* >
 }
 	boolean command(StringBuffer sistema) :
 	{	
@@ -153,14 +154,14 @@ TOKEN : /*Constantes */
 	    |   "(" <PICK> objetoRecoger() ")" {world.pickBalloons(x); salida = "Comando:  Pick";}
 	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")"  {if x != null { move_dir(token.imagen, x)}
 	    																		else if n != null { move_dir(token.image, n)}
+	    																		
 	    																		}
-	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {//????????????????????????????????
-	    													}
+	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {run_dirs(token.image)}
 	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")"{if x != null { move_face(token.imagen, x)}
 	    																		else if n != null { move_face(token.image, n)}
 	    																		}
 	    |   "(" <SKIP> ")" {}
-		|   "(" x=funcion() ")" {nombrefuncion()}
+		|   "(" f=funcion() (< NOMBRE >)* ")" {ejecutarFuncion(f, token.image)}
 
 		)
 
@@ -241,7 +242,8 @@ TOKEN : /*Constantes */
 	}
 
 	//FACE NORTH
-	void face_north(c_face) {
+	void face_north(c_face):
+	{
 	  if RobotWorld.getFacing() == SOUTH {
 	    RobotWorld.turnRight();
 	    RobotWorld.turnRight();
@@ -259,7 +261,8 @@ TOKEN : /*Constantes */
 	}
 
 	//FACE SOUTH
-	void face_south(c_face) {
+	void face_south(c_face):
+	{
 	  if RobotWorld.getFacing() == NORTH {
 		  RobotWorld.turnRight();
 	  	  RobotWorld.turnRight();
@@ -278,7 +281,8 @@ TOKEN : /*Constantes */
 	}
 
 	//FACE EAST
-	void face_east(c_face) {
+	void face_east(c_face):
+	{
 	  if RobotWorld.getFacing() == NORTH {
 		  RobotWorld.turnRight();  
 		}
@@ -296,7 +300,8 @@ TOKEN : /*Constantes */
 	}
 
 	//FACE WEST
-	void face_west(c_face) {
+	void face_west(c_face):
+	{
 	  if RobotWorld.getFacing() == NORTH {
 		  RobotWorld.turnRight();
 	  	  RobotWorld.turnRight();
@@ -317,7 +322,6 @@ TOKEN : /*Constantes */
 	//MOVE DIR
 	void move_dir(c_dir, k):
 	{
-		
 		if c_dir == ":right" {
 		  	for (i=1; i<=k; i++) {
 				RobotWorld.right();
@@ -345,19 +349,21 @@ TOKEN : /*Constantes */
 	}
 
 	//RUN DIRS
-	void run_dirs(lista_dirs):
+	void run_dirs(c_dirs):
 	{
-	  	//for i in lista de direcciones
-			if c_dir == ":right" {
+	  //FALTA QUITAR ESPACIOS
+	  	List<String> list_dirs = Arrays.asList(c_dirs.split(", ", 0));
+	  	for (int i = 0; i < list_dirs.size(); i++)
+			if list_dirs[i] == ":right" {
 			  	RobotWorld.right();
 			}
-			else if c_dir == ":left" {
+			else if list_dirs[i] == ":left" {
 			  	RobotWorld.left();
 			}
-			else if c_dir == ":front" {
+			else if list_dirs[i] == ":front" {
 			  	RobotWorld.up();
 			}
-			else if c_dir == ":back" {
+			else if list_dirs[i] == ":back" {
 			  	RobotWorld.down();
 			}
 			else:
@@ -400,22 +406,41 @@ TOKEN : /*Constantes */
 	{
 	}
 	
-	//LLAMAR FUNCION
-	funcion():
+	//FUNCION
+	String funcion():
 	{
-	  for (i=0;i<tablaFunciones.size();i++) {
-			if (tablaFunciones[i] == undefined) {
-		    	console.log('la clave',i,'no está presente');
+	  	for (i=0;i<tablaFunciones.size();i++) {
+			if (tablaFunciones.get(i) == undefined) {
+		    	console.log('la clave',i,'no esta presente');
 			}
 		 	else {
-		    	console.log('la clave',i,'está presente');
+		    	console.log('la clave',i,'esta presente');
 		  	}
-		}
-	x=tablaFunciones.get(n)
+		 }
 	}
 	{
 	}
 
+	
+	//EJECUTAR FUNCION
+	void ejecutarFuncion(nombreFuncion, parametros):
+	{
+	  	
+	  	List<String> lista_parametros = Arrays.asList(parametros.split(" ", 0));
+		int numparametrosf = lista_parametros.size()
+		Map dicFuncion = tablaFunciones.get(nombreFuncion)
+		int numparametros = dicFuncion.get("numparametros");
+		if numparametrosf == numparametros {
+		  	//bloque()
+		}
+		else {
+		  	//error
+		}
+	}
+	{
+	}
+
+	
 	//ESTRUCTURAS
 	boolean structure(StringBuffer sistema) :
 	{	
@@ -430,12 +455,23 @@ TOKEN : /*Constantes */
 		   	"(" <IF> x=condition() y=bloque() z=bloque() ")" {}  
 		| 	"(" <LOOP>   x=condition() bloque1() ")" {}
 		| 	"(" <REPEAT>  (x=numero()|n=nombreVariable()) bloque1() ")" {}  
-		|   "(" <DEFUN> n=nombreFuncion() "(" (<NOMBRE>)* ")" bloque1() ")" { }			  			
+		|   "(" <DEFUN> n=nombreFuncion() "(" (<NOMBRE>)* ")" b=bloque1() ")" {crear_funcion(n, token.image, b)}			  			
 		) 
 
 		
 	}
-
+	//CREAR FUNCION
+	void crear_funcion(nombreFuncion, parametros, bloque):
+	{
+	  	List<String> lista_parametros = Arrays.asList(c_dirs.split(" ", 0));
+	  	Map<String,?> dicFuncion = new Map<String,?>();
+	  	dicFuncion.put("numparametros", lista_parametros.size());
+	  	dicFuncion.put("bloque", bloque);
+		tablaFunciones.put(nombreFuncion, dicFuncion)
+	}
+	{
+	}
+	
 	//BLOQUE
 	boolean bloque(StringBuffer sistema):
 	{
