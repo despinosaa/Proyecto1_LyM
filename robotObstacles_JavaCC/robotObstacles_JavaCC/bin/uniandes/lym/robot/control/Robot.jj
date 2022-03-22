@@ -455,7 +455,7 @@ TOKEN : /*Constantes */
 		   	"(" <IF> x=condition() y=bloque() z=bloque() ")" {}  
 		| 	"(" <LOOP>   x=condition() bloque1() ")" {}
 		| 	"(" <REPEAT>  (x=numero()|n=nombreVariable()) bloque1() ")" {}  
-		|   "(" <DEFUN> n=nombreFuncion() "(" (<NOMBRE>)* ")" b=bloque1() ")" {crear_funcion(n, token.image, b)}			  			
+		|   "(" <DEFUN> (<NOMBRE>)* "(" (<NOMBRE>)* ")" b=bloque1() ")" {crear_funcion(n, token.image, b)}			  			
 		) 
 
 		
