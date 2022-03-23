@@ -59,8 +59,7 @@ PARSER_END(Robot)
 
 SKIP:
 {
-	" "
-	|	"\r"
+		"\r"
 	|	"\t"
 	| 	"\n"
 }
@@ -68,46 +67,54 @@ SKIP:
 TOKEN: /* Nombres de Comandos */
 {
 
-			<DEFVAR:  "defvar">
-		| 	<IGUAL: "=">
-		| 	<MOVE: "move">
-		| 	<TURN: "turn">
-		|   <FACE: "face">
-		|   <PUT: "put">
-		|   <PICK: "pick">
-		|   <MOVE_DIR: "move-dir">
-		|   <RUN_DIRS: "run-dirs">
-		|   <MOVE_FACE: "move-face">
-		|   <SKIP: "skip">
-		/* A function call */
+			<DEFVAR:  "defvar ">
+		| 	<IGUAL: "= ">
+		| 	<MOVE: "move ">
+		| 	<TURN: "turn ">
+		|   <FACE: "face ">
+		|   <PUT: "put ">
+		|   <PICK: "pick ">
+		|   <MOVE_DIR: "move-dir ">
+		|   <RUN_DIRS: "run-dirs ">
+		|   <MOVE_FACE: "move-face ">
+		|   <SKIP: "skip ">
+
 }
+
+TOKEN: /* ESPACIO */
+{
+	<ESPACIO:  " ">
+}
+
+
 
 TOKEN: /* Nombres de Estructuras */
 {
 
-			<IF:  "if">
-		| 	<LOOP: "loop">
-		| 	<REPEAT: "repeat">
-		| 	<DEFUN: "defun">
+			<IF:  "if ">
+		| 	<LOOP: "loop ">
+		| 	<REPEAT: "repeat ">
+		| 	<DEFUN: "defun ">
 		
 }
 
 TOKEN: /* Nombres de condiciones */
 {
 
-			<FACING_P:  "facing-p">
-		| 	<CAN_PUT_P: "can-put-p">
-		| 	<CAN_PICK_P: "can-pick-p">
-		| 	<CAN_MOVE_P: "can-move-p">
-		| 	<NOT: "not">
-		/* A function call */
+			<FACING_P:  "facing-p ">
+		| 	<CAN_PUT_P: "can-put-p ">
+		| 	<CAN_PICK_P: "can-pick-p ">
+		| 	<CAN_MOVE_P: "can-move-p ">
+		| 	<NOT: "not ">
+
+
 		
 }
 
 TOKEN :
 {
-		<T_BALLOONS:  "BALLOONS" >
-		|	<T_CHIPS:   "CHIPS"  >	
+		<T_BALLOONS:  "BALLOONS " >
+		|	<T_CHIPS:   "CHIPS "  >	
 }
 
 
@@ -127,43 +134,41 @@ TOKEN :
 
 TOKEN : /*Constantes */
 {
-		<CONSTANT_TURN: ":left"|":right"|":around">
-		<CONSTANT_FACE: ":north"|":south"|":east"|":west">
-		<CONSTANT_DIR: ":front"|":right"|":left"|":back" >
-		<CONSTANT_DIRS: (":front"|":right"|":left"|":back")(", :front"|", :right"|", :left"|", :back")* >
+		<CONSTANT_TURN: ":left "|":right "|":around ">
+		<CONSTANT_FACE: ":north "|":south "|":east "|":west ">
+		<CONSTANT_DIR: ":front "|":right "|":left "|":back " >
+		<CONSTANT_DIRS: (":front "|":right "|":left "|":back ")(", :front "|", :right "|", :left "|", :back ")* >
 }
-	boolean command(StringBuffer sistema) :
+	String command(StringBuffer sistema) :
 	{	
 		
 		int x = null;
 		String n = null;
 		salida=new String();
+		List<String> direcciones = new ArrayList<>();
 		
 	}
 	
 	{
 		(
 
-		   	"(" <DEFVAR> n=nombre() x=numero() ")" {variablesYValores.put(n,x);salida = "Variable "+ n + " declarada con valor " + String.valueOf(x);}  
-		| 	"(" <IGUAL>  n=nombreVariable() x=numero() ")" {variablesYValores.put(n,x);salida = "Se reemplazó la variable "+ n + " con el valor " + String.valueOf(x);}
-		| 	"(" <MOVE>  (x=numero()|n=nombreVariable()) ")" {if x != null { move(x)}
-	    													else if n != null { move(n)}}  
-		|   "(" <TURN> <CONSTANT_TURN> ")" {turn(token.image)}			  			
-		|   "(" <FACE> <CONSTANT_FACE> ")" {face(token.image)}	
-	    |   "(" <PUT> objetoPoner() ")" {world.popBalloons(x); salida = "Comando:  Put";}
-	    |   "(" <PICK> objetoRecoger() ")" {world.pickBalloons(x); salida = "Comando:  Pick";}
-	    |   "(" <MOVE_DIR> (x=numero()|n=nombreVariable()) <CONSTANT_DIR> ")"  {if x != null { move_dir(token.imagen, x)}
-	    																		else if n != null { move_dir(token.image, n)}
-	    																		
-	    																		}
-	    |   "(" <RUN_DIRS> "(" (<CONSTANT_DIR >)+ ")"  ")" {run_dirs(token.image)}
-	    |   "(" <MOVE_FACE> (x=numero()|n=nombreVariable()) <CONSTANT_FACE> ")"{if x != null { move_face(token.imagen, x)}
-	    																		else if n != null { move_face(token.image, n)}
-	    																		}
-	    |   "(" <SKIP> ")" {}
-		|   "(" f=funcion() (< NOMBRE >)* ")" {ejecutarFuncion(f, token.image)}
-
-		)
+		   	"(" < ESPACIO >* <DEFVAR> < ESPACIO >* n=nombre() < ESPACIO >* x=numero() ")" {variablesYValores.put(n,x);salida = "Variable "+ n + " declarada con valor " + String.valueOf(x);return ",defvar";}  
+		| 	"(" < ESPACIO >* <IGUAL> < ESPACIO >* n=nombreVariable() < ESPACIO >* x=numero() ")" {variablesYValores.put(n,x);salida = "Se reemplazó la variable "+ n + " con el valor " + String.valueOf(x);return ",igual";}
+		| 	"(" < ESPACIO >* <MOVE> < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* ")" {if x != null { move(x);}
+	    																							else if n != null { move(n); }return ",move";}  
+		|   "(" < ESPACIO >* <TURN> < ESPACIO >* <CONSTANT_TURN> < ESPACIO >* ")" {turn(token.image);return ",turn";}			  			
+		|   "(" < ESPACIO >* <FACE> < ESPACIO >* <CONSTANT_FACE> < ESPACIO >* ")" {face(token.image);return ",face";}	
+	    |   "(" < ESPACIO >* <PUT> < ESPACIO >* objetoPoner() < ESPACIO >* ")" {world.popBalloons(x); salida = "Comando:  Put";return ",put";}
+	    |   "(" < ESPACIO >* <PICK> < ESPACIO >* objetoRecoger() < ESPACIO >* ")" {world.pickBalloons(x); salida = "Comando:  Pick";return ",pick";}
+	    |   "(" < ESPACIO >* <MOVE_DIR> < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* <CONSTANT_DIR> < ESPACIO >* ")"  {if x != null { move_dir(token.imagen, x); }
+														   																		else if n != null { move_dir(token.image, n);}return ",move_dir";}
+	    |   "(" < ESPACIO >* <RUN_DIRS> < ESPACIO >* "(" (direcciones=constant_dir(direcciones) < ESPACIO >*)+ ")" < ESPACIO >* ")" {run_dirs(direcciones);return ",run_dirs";}
+	    |   "(" < ESPACIO >* <MOVE_FACE> < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* <CONSTANT_FACE> < ESPACIO >* ")"{if x != null { move_face(token.imagen, x);}
+														    																		else if n != null { move_face(token.image, n);}return ",move_face";}
+	    |   "(" < ESPACIO >* <SKIP> < ESPACIO >* ")" {return ",skip";}
+		|   "(" < ESPACIO >* f=funcion() < ESPACIO >* (< NOMBRE >< ESPACIO >*)* < ESPACIO >* ")" {ejecutarFuncion(f, token.image);return ",funcion";}
+		| 	< ESPACIO >* command()
+		}
 
 		{
 		  //  try {
@@ -179,6 +184,16 @@ TOKEN : /*Constantes */
      |  "\n" { return true; }
 
 		| <EOF> {return false;} 
+	}
+
+	ArrayList<>() constant_dir(ArrayList<>() direcciones):
+	{}
+	{
+		<CONSTANT_DIR>
+		{
+			direcciones.add(token.image)
+			return direcciones;
+		}
 	}
 
 	//COMANDOS
@@ -215,7 +230,7 @@ TOKEN : /*Constantes */
 			RobotWorld.turnRight();
 		}
 		else:
-			print("Direccion no valida")
+			print("Direccion no valida");
 	}
 	{
 	}
@@ -343,7 +358,7 @@ TOKEN : /*Constantes */
 			}
 		}
 		else:
-			print("Direccion no valida")
+			print("Direccion no valida");
 	}
 	{
 	}
@@ -367,7 +382,7 @@ TOKEN : /*Constantes */
 			  	RobotWorld.down();
 			}
 			else:
-				print("Direccion no valida")
+				print("Direccion no valida");
 	}
 	{
 	}
@@ -389,7 +404,7 @@ TOKEN : /*Constantes */
 			face_west(c_face)
 		}
 		else:
-			print("Orientacion no valida")
+			print("Orientacion no valida");
 			paila = false;
 			
 		if paila { 
@@ -408,58 +423,106 @@ TOKEN : /*Constantes */
 	
 	//FUNCION
 	String funcion():
+	{}
 	{
-	  	for (i=0;i<tablaFunciones.size();i++) {
-			if (tablaFunciones.get(i) == undefined) {
-		    	console.log('la clave',i,'no esta presente');
+	  < NOMBRE >
+	  {
+	    for (i=0;i<tablaFunciones.size();i++) {
+			if (tablaFunciones.get(i) == token.image) {
+			  	return tablaFunciones.get(i)
 			}
-		 	else {
-		    	console.log('la clave',i,'esta presente');
-		  	}
+		 return "Error"
 		 }
+	  }
 	}
-	{
-	}
-
+	
 	
 	//EJECUTAR FUNCION
 	void ejecutarFuncion(nombreFuncion, parametros):
 	{
-	  	
 	  	List<String> lista_parametros = Arrays.asList(parametros.split(" ", 0));
-		int numparametrosf = lista_parametros.size()
-		Map dicFuncion = tablaFunciones.get(nombreFuncion)
+		int numparametrosf = lista_parametros.size();
+		Map dicFuncion = tablaFunciones.get(nombreFuncion);
 		int numparametros = dicFuncion.get("numparametros");
-		if numparametrosf == numparametros {
-		  	//bloque()
-		}
-		else {
-		  	//error
+		if numparametrosf == numparametros
+		{
+	  		bloque()
+		  //	String inst = dicFuncion.get("bloque");
+		  //	String[] instrucciones = inst.split(",");
+		  //	while i<instrucciones.size()
+		  //	{
+		  //	  if instrucciones[i]=="defvar":
+		  //	  	variablesYValores.put(n,x);
+		  //	}
 		}
 	}
 	{
 	}
-
+	
 	
 	//ESTRUCTURAS
-	boolean structure(StringBuffer sistema) :
+	String structure(StringBuffer sistema) :
 	{	
-		int x;
-		String n;
+		int x = null;
+		String n = null;
+		int num = 0;
 		salida=new String();
 	}
 	
 	{
 		(
 
-		   	"(" <IF> x=condition() y=bloque() z=bloque() ")" {}  
-		| 	"(" <LOOP>   x=condition() bloque1() ")" {}
-		| 	"(" <REPEAT>  (x=numero()|n=nombreVariable()) bloque1() ")" {}  
-		|   "(" <DEFUN> (<NOMBRE>)* "(" (<NOMBRE>)* ")" b=bloque1() ")" {crear_funcion(n, token.image, b)}			  			
+		   	"(" < ESPACIO >* <IF> < ESPACIO >* x=condition() < ESPACIO >* y=bloque() < ESPACIO >* z=bloque() < ESPACIO >* ")"
+		   	{
+		   	  if x==true
+		   	  {
+		   	   bloque() 
+		   	  }
+		   	  else
+		   	  {
+		   	   bloque() 
+		   	  }
+		   	  return ",if";
+		   	}  
+		| 	"(" < ESPACIO >* <LOOP> < ESPACIO >*  x=condition() < ESPACIO >* bloque() < ESPACIO >* ")"
+			{
+		   	  while x==true
+		   	  {
+		   	   bloque();
+		   	   x=condition();
+		  	  }
+		  	  return ",loop";
+		   	}  
+		| 	"(" < ESPACIO >* <REPEAT> < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* bloque() < ESPACIO >* ")" {}  
+			{
+			  if x != null
+				  {
+				    num=x;
+				  }
+			  else if n != null
+				  {
+				    num=variablesYValores.get(n);
+				  }
+			  int i = 0;
+		   	  while i<num
+		   	  {
+		   	   bloque();
+		   	   i++;
+		  	  }
+		  	  return ",repeat";
+		   	}  
+		|   "(" < ESPACIO >* <DEFUN> < ESPACIO >* (<NOMBRE>)* < ESPACIO >* "(" (<NOMBRE>< ESPACIO >*)* < ESPACIO >* ")"< ESPACIO >* b=bloque() < ESPACIO >* ")"
+			{
+			  crear_funcion(n, token.image, b);
+			  return ",defun";
+		   	}  
+		| < ESPACIO >* structure()
 		) 
 
 		
 	}
+
+
 	//CREAR FUNCION
 	void crear_funcion(nombreFuncion, parametros, bloque):
 	{
@@ -467,27 +530,28 @@ TOKEN : /*Constantes */
 	  	Map<String,?> dicFuncion = new Map<String,?>();
 	  	dicFuncion.put("numparametros", lista_parametros.size());
 	  	dicFuncion.put("bloque", bloque);
-		tablaFunciones.put(nombreFuncion, dicFuncion)
+		tablaFunciones.put(nombreFuncion, dicFuncion);
 	}
 	{
 	}
 	
 	//BLOQUE
-	boolean bloque(StringBuffer sistema):
+	String bloque(StringBuffer sistema):
 	{
-		int x = null;
-		String n = null;
-		int num = 0;
-		salida=new String();
+		String instrucciones = "";
 	}
 	{
 	  (
-	      "(" structure() ")" {}  
-		| "(" command() ")" {}	  )+
+	      "(" s=structure() ")" {instrucciones = instrucciones + s;}  
+		| "(" s=command() ")" {instrucciones = instrucciones + s;}	  )+
+	
+	  {
+		return instrucciones;
+	  }
 	}
 	
 	//CONDICIONES
-	boolean condition(StringBuffer sistema) :
+	String condition(StringBuffer sistema) :
 	{	
 		int x = null;
 		String n = null;
@@ -497,24 +561,30 @@ TOKEN : /*Constantes */
 
 	{
 		(
-		   	"(" <FACING_P> <CONSTANT_FACE> ")"
+		   	"(" < ESPACIO >* <FACING_P> < ESPACIO >* <CONSTANT_FACE> < ESPACIO >* ")"
 		   	{
 			facing_p();
+			return ",facing_p";
 		    }  
-		| 	"(" <CAN_PUT_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")"
+		| 	"(" < ESPACIO >* <CAN_PUT_P> < ESPACIO >* (<T_BALLOONS>|<T_CHIPS>) < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* ")"
 			{
 			  can_put_p();
+			  return ",can_put_p";
 			 }
-		| 	"(" <CAN_PICK_P>  (<T_BALLOONS>|<T_CHIPS>) (x=numero()|n=nombreVariable()) ")"
+		| 	"(" < ESPACIO >* <CAN_PICK_P> < ESPACIO >* (<T_BALLOONS>|<T_CHIPS>) < ESPACIO >* (x=numero()|n=nombreVariable()) < ESPACIO >* ")"
 			{
 			  can_pick_p();
+			  return ",can_pick_p";
 			 }
-		|   "(" <CAN_MOVE_P> <CONSTANT_FACE> ")"
+		|   "(" < ESPACIO >* <CAN_MOVE_P> < ESPACIO >* <CONSTANT_FACE> < ESPACIO >* ")"
 			{
 			  can_move_p();
+			  return ",can_pick_p";
 			}  
-		|   "(" <NOT> condition() ")" {}  
-		|	"(" ")"
+		|   "(" < ESPACIO >* <NOT> < ESPACIO >* condition() < ESPACIO >* ")" {return ",not";}  
+		|	"("< ESPACIO >* ")"
+		|   "(" < ESPACIO >* f=funcion() < ESPACIO >* (< NOMBRE >< ESPACIO >*)* < ESPACIO >* ")" {ejecutarFuncion(f, token.image);return ",funcion";}
+		| 	< ESPACIO >* condition()
 			{
 		  }
 
@@ -557,7 +627,7 @@ TOKEN : /*Constantes */
 		  {
 		  	resp= false;
 		  }
-		  return resp
+		  return resp;
 		}
 		{}
 		
@@ -625,8 +695,8 @@ TOKEN : /*Constantes */
 		int f=1;	
 	}
 	{
-		( <T_CHIPS>    "," f=numero() {world.putChips(f); salida = "Command:  Put Chips"; })
-		|  	  ( <T_BALLOONS>   "," f=numero() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+		( <T_CHIPS> < ESPACIO >*   ","< ESPACIO >* f=numero() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|  	  ( <T_BALLOONS> < ESPACIO >*  ","< ESPACIO >* f=numero() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
 
 	}
 
@@ -635,8 +705,8 @@ TOKEN : /*Constantes */
 		int f=1;	
 	}
 	{
-		( <T_CHIPS>   "," f=numero() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <T_BALLOONS>   "," f=numero() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+		( <T_CHIPS> < ESPACIO >*  "," < ESPACIO >* f=numero() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <T_BALLOONS> < ESPACIO >* "," < ESPACIO >* f=numero() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
 
 	}
 
@@ -660,24 +730,6 @@ TOKEN : /*Constantes */
 	  }
 	}
 
-
-	String nombreVariable():
-	{
-		for (i=0;i<5;i++) {
-			if (diccionario[i] === undefined) {
-		    	console.log('la clave',i,'no está presente');
-			}
-		 	else {
-		    	console.log('la clave',i,'está presente');
-		  	}
-		}
-	}
-	{
-	  <NOMBRE>
-	  {
-	    return nombre;
-	  }
-	}
 	
 	int numero() throws Error:
 	{	
